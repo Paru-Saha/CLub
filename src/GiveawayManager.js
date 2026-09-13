@@ -1,8 +1,7 @@
 const fs = require('fs');
-const path = require('path');
 const { DATA_FILE } = require('./config');
 
-const dataPath = path.join(__dirname, '..', DATA_FILE);
+const dataPath = DATA_FILE;
 
 /**
  * GiveawayManager handles CRUD operations and persistence for giveaways
@@ -10,7 +9,16 @@ const dataPath = path.join(__dirname, '..', DATA_FILE);
 class GiveawayManager {
     constructor() {
         this.giveaways = new Map();
+        this.ensureDataDirectory();
         this.load();
+    }
+
+    ensureDataDirectory() {
+        try {
+            fs.mkdirSync(require('path').dirname(dataPath), { recursive: true });
+        } catch (err) {
+            console.error('[GiveawayManager] Failed to prepare data directory:', err.message);
+        }
     }
 
     load() {
@@ -30,6 +38,7 @@ class GiveawayManager {
 
     save() {
         try {
+            this.ensureDataDirectory();
             const data = Object.fromEntries(this.giveaways);
             fs.writeFileSync(dataPath, JSON.stringify(data, null, 2), 'utf-8');
         } catch (err) {
