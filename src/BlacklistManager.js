@@ -1,8 +1,7 @@
 const fs = require('fs');
-const path = require('path');
 const { BLACKLIST_FILE } = require('./config');
 
-const dataPath = path.join(__dirname, '..', BLACKLIST_FILE);
+const dataPath = BLACKLIST_FILE;
 
 /**
  * BlacklistManager stores users who may enter giveaways but can never win.
@@ -11,7 +10,16 @@ const dataPath = path.join(__dirname, '..', BLACKLIST_FILE);
 class BlacklistManager {
     constructor() {
         this.blacklists = new Map(); // guildId -> Set(userId)
+        this.ensureDataDirectory();
         this.load();
+    }
+
+    ensureDataDirectory() {
+        try {
+            fs.mkdirSync(require('path').dirname(dataPath), { recursive: true });
+        } catch (err) {
+            console.error('[BlacklistManager] Failed to prepare data directory:', err.message);
+        }
     }
 
     load() {
@@ -33,6 +41,7 @@ class BlacklistManager {
 
     save() {
         try {
+            this.ensureDataDirectory();
             const data = {};
 
             for (const [guildId, userIds] of this.blacklists.entries()) {
